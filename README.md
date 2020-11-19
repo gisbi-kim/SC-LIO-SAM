@@ -59,6 +59,7 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
 
 #### Minor
 - We used C++14 to use std::make_unique in Scancontext.cpp but you can use C++11 with slightly modifying only that part.
+- We used a larger value for velocity upper bound (see ```failureDetection``` in imuPreintegration.cpp) for fast motions of a MulRan dataset's car platform.
 - The some code lines are adapted for Ouster LiDAR. Thus, if you use an other LiDAR, please refer [the original author's guideline](https://github.com/TixiaoShan/LIO-SAM#other-notes) and fix some lines.
 - A LiDAR scan of MulRan dataset has no ring information, thus we simply made a hardcoding like ```int rowIdn = (i % 64) + 1 ``` in imageProjection.cpp to make a ring index information that LIO-SAM requires, and it works. However, if you use an other LiDAR, you need to change this line. 
 
@@ -102,6 +103,7 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
 - About funtions for convenience
   - save extended data
     - nodes' time, 6D pose, covariance, SC descriptors, SC keys
+  - make a static map and self-labeled dynamic points by combining SC-LIO-SAM and [removert](https://github.com/irapkaist/removert). 
 - Minor (not related to the performance)
   - fix the visualization issue: disappearing map points after SC loop closing
   - fix safe-save for map points after closing the program   
