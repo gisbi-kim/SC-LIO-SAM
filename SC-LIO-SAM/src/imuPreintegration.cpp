@@ -436,7 +436,7 @@ public:
     bool failureDetection(const gtsam::Vector3& velCur, const gtsam::imuBias::ConstantBias& biasCur)
     {
         Eigen::Vector3f vel(velCur.x(), velCur.y(), velCur.z());
-        if (vel.norm() > 60) // original 30 
+        if (vel.norm() > 80) // original 30 
         {
             ROS_WARN("Large velocity, reset IMU-preintegration!");
             return true;
