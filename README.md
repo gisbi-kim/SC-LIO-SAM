@@ -32,7 +32,7 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
 - As seen in the above [video](https://youtu.be/Y6DXlC34qlc?t=459), the combination of Scan Context loop detector and LIO-SAM's odometry is robust to highly dynamic and less structured environments (e.g., a wide road on a bridge with many moving objects).
 
 ## How to use?
-- We provide a tutorial that runs the LIO-SAM on MulRan dataset, you can reproduce the above results by following these steps. 
+- We provide a tutorial that runs SC-LIO-SAM on MulRan dataset, you can reproduce the above results by following these steps. 
 
 1. You can download the dataset at the [MulRan dataset website](https://sites.google.com/view/mulran-pr/home)
 2. Place the directory `SC-LIO-SAM` under user catkin work space <br>
