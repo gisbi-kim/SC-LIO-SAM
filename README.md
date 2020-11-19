@@ -45,7 +45,7 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
     source devel/setup.bash
     roslaunch lio_sam run.launch
     ```
-3. By following [this guideline](https://github.com/irapkaist/file_player_mulran), you can easily publish LiDAR and IMU topics via ROS.
+3. By following [this guideline](https://github.com/irapkaist/file_player_mulran), you can easily publish the MulRan dataset's LiDAR and IMU topics via ROS.
 
 
 ## Dependency
