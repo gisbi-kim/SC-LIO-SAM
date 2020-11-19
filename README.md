@@ -23,11 +23,11 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
 
 #### example 1: [KAIST02 of MulRan dataset](https://youtu.be/Il0YxztuZEU?t=280)
 
-<p align="center"><img src="doc/kaist02.png" width=900></p>
+<p align="center"><img src="SC-LIO-SAM/doc/kaist02.png" width=900></p>
 
 
 #### example 2: [Riverside03 of MulRan dataset](https://youtu.be/Y6DXlC34qlc?t=459)
-<p align="center"><img src="doc/riverside03.png" width=900></p>
+<p align="center"><img src="SC-LIO-SAM/doc/riverside03.png" width=900></p>
 
 - As seen in the above [video](https://youtu.be/Y6DXlC34qlc?t=459), the combination of Scan Context loop detector and LIO-SAM's odometry is robust to highly dynamic and less structured environments (e.g., a wide road on a bridge with many moving objects).
 
