@@ -89,10 +89,11 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
 
 ## Contact
 - Maintainer: Giseop Kim (`paulgkim@kaist.ac.kr`)
+#### Contributors
+- Minwoo Jung: made the original LIO-SAM runs on the MulRan dataset. 
 
 ## Acknowledgement
   - SC-LIO-SAM is based on LIO-SAM (Tixiao Shan et al., IROS 2020). We thank Tixiao Shan and the LIO-SAM authors for providing a great base framework.
-
 
 ## TODO
 - About performance
