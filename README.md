@@ -63,6 +63,14 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
 - The some code lines are adapted for Ouster LiDAR. Thus, if you use an other LiDAR, please refer [the original author's guideline](https://github.com/TixiaoShan/LIO-SAM#other-notes) and fix some lines.
 - A LiDAR scan of MulRan dataset has no ring information, thus we simply made a hardcoding like ```int rowIdn = (i % 64) + 1 ``` in imageProjection.cpp to make a ring index information that LIO-SAM requires, and it works. However, if you use an other LiDAR, you need to change this line. 
 
+## Applications 
+- With our [save utility](https://github.com/gisbi-kim/SC-LIO-SAM/blob/1e1bfea4f7708fbd93d9eb471e63ae9804e1dd16/SC-LIO-SAM/src/mapOptmization.cpp#L203) accompanied with this repository, we can save a set of keyframe's time, estimated pose, a corresponding point cloud, and Scan Context descriptors. The estimated poses are saved as a file named optimized_poses.txt and its format is equivalent to the famous KITTI odometry dataset's pose.txt file. For example: 
+<p align="center"><img src="SC-LIO-SAM/doc/saver.png" width=800></p>
+
+- If you use the above saved files, you can feed these data to [Removert](https://github.com/irapkaist/removert) and can removing dynamic objects. No GT labels or external sensor data such as RTK-GPS is required. This [tutorial](https://youtu.be/UiYYrPMcIRU) guides steps from running SC-LIO-SAM to save data to Removert to remove dynamic objects in a scan. Example results are: 
+<p align="center"><img src="SC-LIO-SAM/doc/removert_eaxmple.png" width=900></p>
+
+
 ## Cite SC-LIO-SAM 
 
 ```
@@ -102,9 +110,8 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
   - support SC augmentation 
   - lagged RS loop closing after large drifts solved 
 - About funtions for convenience
-  - save extended data
-    - nodes' time, 6D pose, covariance, SC descriptors, SC keys
-  - make a static map and self-labeled dynamic points by combining SC-LIO-SAM and [removert](https://github.com/irapkaist/removert). 
+  - [x] save extended data: nodes' time, 6D pose, node's point cloud, and corresponding SC descriptors
+  - [x] make a static map and self-labeled dynamic points by combining SC-LIO-SAM and [removert](https://github.com/irapkaist/removert). 
 - Minor (not related to the performance)
   - fix the visualization issue: disappearing map points after SC loop closing
   - fix safe-save for map points after closing the program   
