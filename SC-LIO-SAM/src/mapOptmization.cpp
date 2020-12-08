@@ -1,8 +1,10 @@
 #include "utility.h"
+
 #include "lio_sam/cloud_info.h"
 
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/slam/dataset.h>
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/navigation/GPSFactor.h>
@@ -18,12 +20,40 @@
 
 #include "Scancontext.h"
 
+
 using namespace gtsam;
 
 using symbol_shorthand::X; // Pose3 (x,y,z,r,p,y)
 using symbol_shorthand::V; // Vel   (xdot,ydot,zdot)
 using symbol_shorthand::B; // Bias  (ax,ay,az,gx,gy,gz)
 using symbol_shorthand::G; // GPS pose
+
+
+void saveOptimizedVerticesKITTIformat(gtsam::Values _estimates, std::string _filename)
+{
+    using namespace gtsam;
+
+    // ref from gtsam's original code "dataset.cpp"
+    std::fstream stream(_filename.c_str(), fstream::out);
+
+    for(const auto& key_value: _estimates) {
+        auto p = dynamic_cast<const GenericValue<Pose3>*>(&key_value.value);
+        if (!p) continue;
+
+        const Pose3& pose = p->value();
+
+        Point3 t = pose.translation();
+        Rot3 R = pose.rotation();
+        auto col1 = R.column(1); // Point3
+        auto col2 = R.column(2); // Point3
+        auto col3 = R.column(3); // Point3
+
+        stream << col1.x() << " " << col2.x() << " " << col3.x() << " " << t.x() << " "
+               << col1.y() << " " << col2.y() << " " << col3.y() << " " << t.y() << " "
+               << col1.z() << " " << col2.z() << " " << col3.z() << " " << t.z() << std::endl;
+    }
+}
+
 
 /*
     * A point cloud type that has 6D pose info ([x,y,z,roll,pitch,yaw] intensity is time stamp)
@@ -98,6 +128,7 @@ public:
 
     pcl::PointCloud<PointType>::Ptr laserCloudRaw; // giseop
     pcl::PointCloud<PointType>::Ptr laserCloudRawDS; // giseop
+    double laserCloudRawTime;
 
     pcl::PointCloud<PointType>::Ptr laserCloudCornerLast; // corner feature set from odoOptimization
     pcl::PointCloud<PointType>::Ptr laserCloudSurfLast; // surf feature set from odoOptimization
@@ -168,6 +199,17 @@ public:
     // // loop detector 
     SCManager scManager;
 
+    // data saver
+    std::fstream pgSaveStream; // pg: pose-graph 
+    std::fstream pgTimeSaveStream; // pg: pose-graph 
+    std::vector<std::string> edges_str;
+    std::vector<std::string> vertices_str;
+    // std::fstream pgVertexSaveStream;
+    // std::fstream pgEdgeSaveStream;
+
+    std::string saveSCDDirectory;
+    std::string saveNodePCDDirectory;
+
 public:
     mapOptimization()
     {
@@ -205,6 +247,26 @@ public:
         allocateMemory();
 
         pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
+
+        // giseop
+        // create directory and remove old files;
+        savePCDDirectory = std::getenv("HOME") + savePCDDirectory;
+        int unused = system((std::string("exec rm -r ") + savePCDDirectory).c_str());
+        unused = system((std::string("mkdir ") + savePCDDirectory).c_str());
+
+        saveSCDDirectory = savePCDDirectory + "SCDs/"; // SCD: scan context descriptor 
+        unused = system((std::string("exec rm -r ") + saveSCDDirectory).c_str());
+        unused = system((std::string("mkdir -p ") + saveSCDDirectory).c_str());
+
+        saveNodePCDDirectory = savePCDDirectory + "Scans/";
+        unused = system((std::string("exec rm -r ") + saveNodePCDDirectory).c_str());
+        unused = system((std::string("mkdir -p ") + saveNodePCDDirectory).c_str());
+
+        pgSaveStream = std::fstream(savePCDDirectory + "singlesession_posegraph.g2o", std::fstream::out);
+        pgTimeSaveStream = std::fstream(savePCDDirectory + "times.txt", std::fstream::out); pgTimeSaveStream.precision(dbl::max_digits10);
+        // pgVertexSaveStream = std::fstream(savePCDDirectory + "singlesession_vertex.g2o", std::fstream::out);
+        // pgEdgeSaveStream = std::fstream(savePCDDirectory + "singlesession_edge.g2o", std::fstream::out);
+
     }
 
     void allocateMemory()
@@ -254,6 +316,49 @@ public:
         matP.setZero();
     }
 
+    void writeVertex(const int _node_idx, const gtsam::Pose3& _initPose)
+    {
+        gtsam::Point3 t = _initPose.translation();
+        gtsam::Rot3 R = _initPose.rotation();
+
+        std::string curVertexInfo {
+            "VERTEX_SE3:QUAT " + std::to_string(_node_idx) + " "
+            + std::to_string(t.x()) + " " + std::to_string(t.y()) + " " + std::to_string(t.z())  + " " 
+            + std::to_string(R.toQuaternion().x()) + " " + std::to_string(R.toQuaternion().y()) + " " 
+            + std::to_string(R.toQuaternion().z()) + " " + std::to_string(R.toQuaternion().w()) };
+
+        // pgVertexSaveStream << curVertexInfo << std::endl;
+        vertices_str.emplace_back(curVertexInfo);
+    }
+    
+    void writeEdge(const std::pair<int, int> _node_idx_pair, const gtsam::Pose3& _relPose)
+    {
+        gtsam::Point3 t = _relPose.translation();
+        gtsam::Rot3 R = _relPose.rotation();
+
+        std::string curEdgeInfo {
+            "EDGE_SE3:QUAT " + std::to_string(_node_idx_pair.first) + " " + std::to_string(_node_idx_pair.second) + " "
+            + std::to_string(t.x()) + " " + std::to_string(t.y()) + " " + std::to_string(t.z())  + " " 
+            + std::to_string(R.toQuaternion().x()) + " " + std::to_string(R.toQuaternion().y()) + " " 
+            + std::to_string(R.toQuaternion().z()) + " " + std::to_string(R.toQuaternion().w()) };
+
+        // pgEdgeSaveStream << curEdgeInfo << std::endl;
+        edges_str.emplace_back(curEdgeInfo);
+    }
+
+    // void writeEdgeStr(const std::pair<int, int> _node_idx_pair, const gtsam::Pose3& _relPose, const gtsam::SharedNoiseModel _noise)
+    // {
+    //     gtsam::Point3 t = _relPose.translation();
+    //     gtsam::Rot3 R = _relPose.rotation();
+
+    //     std::string curEdgeSaveStream;
+    //     curEdgeSaveStream << "EDGE_SE3:QUAT " << _node_idx_pair.first << " " << _node_idx_pair.second << " "
+    //         << t.x() << " "  << t.y() << " " << t.z()  << " " 
+    //         << R.toQuaternion().x() << " " << R.toQuaternion().y() << " " << R.toQuaternion().z()  << " " << R.toQuaternion().w() << std::endl;
+
+    //     edges_str.emplace_back(curEdgeSaveStream);
+    // }
+
     void laserCloudInfoHandler(const lio_sam::cloud_infoConstPtr& msgIn)
     {
         // extract time stamp
@@ -265,6 +370,7 @@ public:
         pcl::fromROSMsg(msgIn->cloud_corner,  *laserCloudCornerLast);
         pcl::fromROSMsg(msgIn->cloud_surface, *laserCloudSurfLast);
         pcl::fromROSMsg(msgIn->cloud_deskewed,  *laserCloudRaw); // giseop
+        laserCloudRawTime = cloudInfo.header.stamp.toSec(); // giseop save node time
 
         std::lock_guard<std::mutex> lock(mtx);
 
@@ -361,23 +467,10 @@ public:
         return thisPose6D;
     }
 
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     void visualizeGlobalMapThread()
     {
+        //
         ros::Rate rate(0.2);
         while (ros::ok()){
             rate.sleep();
@@ -387,12 +480,25 @@ public:
         if (savePCD == false)
             return;
 
+        // save pose graph (runs when programe is closing)
+        cout << "****************************************************" << endl; 
+        cout << "Saving the posegraph ..." << endl; // giseop
+
+        for(auto& _line: vertices_str)
+            pgSaveStream << _line << std::endl;
+        for(auto& _line: edges_str)
+            pgSaveStream << _line << std::endl;
+
+        pgSaveStream.close();
+        // pgVertexSaveStream.close();
+        // pgEdgeSaveStream.close();
+
+        const std::string kitti_format_pg_filename {savePCDDirectory + "optimized_poses.txt"};
+        saveOptimizedVerticesKITTIformat(isamCurrentEstimate, kitti_format_pg_filename);
+
+        // save map 
         cout << "****************************************************" << endl;
         cout << "Saving map to pcd files ..." << endl;
-        // create directory and remove old files;
-        savePCDDirectory = std::getenv("HOME") + savePCDDirectory;
-        int unused = system((std::string("exec rm -r ") + savePCDDirectory).c_str());
-        unused = system((std::string("mkdir ") + savePCDDirectory).c_str());
         // save key frame transformations
         pcl::io::savePCDFileASCII(savePCDDirectory + "trajectory.pcd", *cloudKeyPoses3D);
         pcl::io::savePCDFileASCII(savePCDDirectory + "transformations.pcd", *cloudKeyPoses6D);
@@ -608,9 +714,13 @@ public:
         pcl::PointCloud<PointType>::Ptr cureKeyframeCloud(new pcl::PointCloud<PointType>());
         pcl::PointCloud<PointType>::Ptr prevKeyframeCloud(new pcl::PointCloud<PointType>());
         {
-            // loopFindNearKeyframes(cureKeyframeCloud, loopKeyCur, 0);
-            loopFindNearKeyframesWithRespectTo(cureKeyframeCloud, loopKeyCur, 0, loopKeyPre); // giseop 
-            loopFindNearKeyframes(prevKeyframeCloud, loopKeyPre, historyKeyframeSearchNum);
+            // loopFindNearKeyframesWithRespectTo(cureKeyframeCloud, loopKeyCur, 0, loopKeyPre); // giseop 
+            // loopFindNearKeyframes(prevKeyframeCloud, loopKeyPre, historyKeyframeSearchNum);
+
+            int base_key = 0;
+            loopFindNearKeyframesWithRespectTo(cureKeyframeCloud, loopKeyCur, 0, base_key); // giseop 
+            loopFindNearKeyframesWithRespectTo(prevKeyframeCloud, loopKeyPre, historyKeyframeSearchNum, base_key); // giseop 
+
             if (cureKeyframeCloud->size() < 300 || prevKeyframeCloud->size() < 1000)
                 return;
             if (pubHistoryKeyFrames.getNumSubscribers() != 0)
@@ -1059,8 +1169,8 @@ public:
         // giseop
         laserCloudRawDS->clear();
         downSizeFilterSC.setInputCloud(laserCloudRaw);
-        downSizeFilterSC.filter(*laserCloudRawDS);
-        
+        downSizeFilterSC.filter(*laserCloudRawDS);        
+
         // Downsample cloud from current scan
         laserCloudCornerLastDS->clear();
         downSizeFilterCorner.setInputCloud(laserCloudCornerLast);
@@ -1070,7 +1180,8 @@ public:
         laserCloudSurfLastDS->clear();
         downSizeFilterSurf.setInputCloud(laserCloudSurfLast);
         downSizeFilterSurf.filter(*laserCloudSurfLastDS);
-        laserCloudSurfLastDSNum = laserCloudSurfLastDS->size();
+        laserCloudSurfLastDSNum = laserCloudSurfLastDS->size();        
+
     }
 
     void updatePointAssociateToMap()
@@ -1487,12 +1598,19 @@ public:
             noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Variances((Vector(6) << 1e-2, 1e-2, M_PI*M_PI, 1e8, 1e8, 1e8).finished()); // rad*rad, meter*meter
             gtSAMgraph.add(PriorFactor<Pose3>(0, trans2gtsamPose(transformTobeMapped), priorNoise));
             initialEstimate.insert(0, trans2gtsamPose(transformTobeMapped));
+
+            writeVertex(0, trans2gtsamPose(transformTobeMapped));
+
         }else{
             noiseModel::Diagonal::shared_ptr odometryNoise = noiseModel::Diagonal::Variances((Vector(6) << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4).finished());
             gtsam::Pose3 poseFrom = pclPointTogtsamPose3(cloudKeyPoses6D->points.back());
             gtsam::Pose3 poseTo   = trans2gtsamPose(transformTobeMapped);
-            gtSAMgraph.add(BetweenFactor<Pose3>(cloudKeyPoses3D->size()-1, cloudKeyPoses3D->size(), poseFrom.between(poseTo), odometryNoise));
+            gtsam::Pose3 relPose = poseFrom.between(poseTo);
+            gtSAMgraph.add(BetweenFactor<Pose3>(cloudKeyPoses3D->size()-1, cloudKeyPoses3D->size(), relPose, odometryNoise));
             initialEstimate.insert(cloudKeyPoses3D->size(), poseTo);
+
+            writeVertex(cloudKeyPoses3D->size(), poseTo);
+            writeEdge({cloudKeyPoses3D->size()-1, cloudKeyPoses3D->size()}, relPose); // giseop
         }
     }
 
@@ -1589,6 +1707,8 @@ public:
             // gtsam::noiseModel::Diagonal::shared_ptr noiseBetween = loopNoiseQueue[i]; // original 
             auto noiseBetween = loopNoiseQueue[i]; // giseop for polymorhpism // shared_ptr<gtsam::noiseModel::Base>, typedef noiseModel::Base::shared_ptr gtsam::SharedNoiseModel
             gtSAMgraph.add(BetweenFactor<Pose3>(indexFrom, indexTo, poseBetween, noiseBetween));
+
+            writeEdge({indexFrom, indexTo}, poseBetween); // giseop
         }
 
         loopIndexQueue.clear();
@@ -1611,9 +1731,6 @@ public:
 
         // loop factor
         addLoopFactor(); // radius search loop factor (I changed the orignal func name addLoopFactor to addLoopFactor)
-
-        // cout << "****************************************************" << endl;
-        // gtSAMgraph.print("GTSAM Graph:\n");
 
         // update iSAM
         isam->update(gtSAMgraph, initialEstimate);
@@ -1699,6 +1816,20 @@ public:
             loopFindNearKeyframes(multiKeyFrameFeatureCloud, cloudKeyPoses6D->size() - 1, historyKeyframeSearchNum);
             scManager.makeAndSaveScancontextAndKeys(*multiKeyFrameFeatureCloud); 
         }
+
+        // save sc data
+        const auto& curr_scd = scManager.getConstRefRecentSCD();
+        std::string curr_scd_node_idx = padZeros(scManager.polarcontexts_.size() - 1);
+
+        saveSCD(saveSCDDirectory + curr_scd_node_idx + ".scd", curr_scd);
+
+        // save keyframe cloud as file giseop
+        pcl::PointCloud<PointType>::Ptr thisKeyFrameCloud(new pcl::PointCloud<PointType>());
+        *thisKeyFrameCloud += *thisCornerKeyFrame;
+        *thisKeyFrameCloud += *thisSurfKeyFrame;
+
+        pcl::io::savePCDFileBinary(saveNodePCDDirectory + curr_scd_node_idx + ".pcd", *thisKeyFrameCloud);
+        pgTimeSaveStream << laserCloudRawTime << std::endl;
 
         // save path for visualization
         updatePath(thisPose6D);

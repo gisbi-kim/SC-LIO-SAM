@@ -227,6 +227,12 @@ MatrixXd SCManager::makeSectorkeyFromScancontext( Eigen::MatrixXd &_desc )
 } // SCManager::makeSectorkeyFromScancontext
 
 
+const Eigen::MatrixXd& SCManager::getConstRefRecentSCD(void)
+{
+    return polarcontexts_.back();
+}
+
+
 void SCManager::makeAndSaveScancontextAndKeys( pcl::PointCloud<SCPointType> & _scan_down )
 {
     Eigen::MatrixXd sc = makeScancontext(_scan_down); // v1 

@@ -13,7 +13,8 @@ lio_sam: # configurations for MulRan dataset
   
   # Export settings
   savePCD: true                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
-  savePCDDirectory: "/Documents/data/LIO-SAM-Mulran-map/"        # in your home folder, starts and ends with "/". Warning: the code deletes "LOAM" folder then recreates it. See "mapOptimization" for implementation
+  # savePCDDirectory: "/Desktop/data/kaist01/sc-lio-sam/"  # in your home folder, starts and ends with "/".
+  savePCDDirectory: "/Desktop/data/riverside01/sc-lio-sam/"  # in your home folder, starts and ends with "/".
 
   # Sensor Settings
   N_SCAN: 64                                  # number of lidar channel (i.e., 16, 32, 64, 128)
@@ -66,7 +67,7 @@ lio_sam: # configurations for MulRan dataset
   # Surrounding map
   surroundingkeyframeAddingDistThreshold: 1.0   # meters, regulate keyframe adding threshold
   surroundingkeyframeAddingAngleThreshold: 0.2  # radians, regulate keyframe adding threshold
-  surroundingKeyframeDensity: 2.0               # meters, downsample surrounding keyframe poses   
+  surroundingKeyframeDensity: 1.0               # meters, downsample surrounding keyframe poses   
   surroundingKeyframeSearchRadius: 50.0         # meters, within n meters scan-to-map optimization (when loop closure disabled)
 
   # Loop closure
