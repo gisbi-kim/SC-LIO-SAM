@@ -12,9 +12,8 @@ lio_sam: # configurations for MulRan dataset
   mapFrame: "map"
   
   # Export settings
-  savePCD: true                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
-  # savePCDDirectory: "/Desktop/data/kaist01/sc-lio-sam/"  # in your home folder, starts and ends with "/".
-  savePCDDirectory: "/Desktop/data/riverside01/sc-lio-sam/"  # in your home folder, starts and ends with "/".
+  savePCD: true 
+  savePCDDirectory: "/home/user/Desktop/data/scliosam/"  # use global path, and end with "/" 
 
   # Sensor Settings
   N_SCAN: 64                                  # number of lidar channel (i.e., 16, 32, 64, 128)
