@@ -3,7 +3,7 @@
     <arg name="project" default="lio_sam"/>
     
     <!-- Parameters -->
-    <rosparam file="$(find lio_sam)/config/params_liosam.yaml" command="load" />
+    <rosparam file="$(find lio_sam)/config/params_mulran.yaml" command="load" />
 
     <!--- LOAM -->
     <include file="$(find lio_sam)/launch/include/module_loam.launch" />

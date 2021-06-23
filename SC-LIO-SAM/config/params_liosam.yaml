@@ -1,8 +1,8 @@
 lio_sam:
 
   # Topics
-  pointCloudTopic: "/os1_points"               # Point cloud data
-  imuTopic: "/imu/data_raw"                         # IMU data
+  pointCloudTopic: "/os_cloud_node/points"               # Point cloud data
+  imuTopic: "/imu/data"                         # IMU data
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
   gpsTopic: "odometry/gpsz"                   # GPS odometry topic from navsat, see module_navsat.launch file
 
@@ -20,11 +20,11 @@ lio_sam:
   
   # Export settings
   savePCD: true                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
-  savePCDDirectory: "/home/user/Desktop/data/scliosam/"  # use global path, and end with "/" 
+  savePCDDirectory: "/home/user/Desktop/data/scliosam/mytest1/"  # use global path, and end with "/" 
 
   # Sensor Settings
-  sensor: mulran                            # lidar sensor type, either 'velodyne' or 'ouster'
-  N_SCAN: 64                               # number of lidar channel (i.e., 16, 32, 64, 128)
+  sensor: ouster                            # lidar sensor type, either 'velodyne' or 'ouster'
+  N_SCAN: 128                               # number of lidar channel (i.e., 16, 32, 64, 128)
   Horizon_SCAN: 1024                          # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048)
   downsampleRate: 1                           # default: 1. Downsample your data if too many points. i.e., 16 = 64 / 4, 16 = 16 / 1
   lidarMinRange: 1.0                          # default: 1.0, minimum lidar range to be used
@@ -38,13 +38,13 @@ lio_sam:
   imuGravity: 9.80511
   imuRPYWeight: 0.01
 
-  # Extrinsics (lidar -> IMU, of MulRan dataset)
-  extrinsicTrans: [1.77, -0.00, -0.05]
-  extrinsicRot: [-1, 0, 0,
-                  0, -1, 0,
+  # Extrinsics (lidar -> IMU)
+  extrinsicTrans: [-0.1, 0.0, 0.0]
+  extrinsicRot: [1, 0, 0,
+                  0, 1, 0,
                   0, 0, 1]
-  extrinsicRPY: [-1,  0, 0,
-                 0, -1, 0,
+  extrinsicRPY: [1,  0, 0,
+                 0, 1, 0,
                   0, 0, 1]
   # extrinsicRot: [1, 0, 0,
   #                 0, 1, 0,

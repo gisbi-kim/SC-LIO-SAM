@@ -59,6 +59,8 @@ typedef std::numeric_limits< double > dbl;
 
 typedef pcl::PointXYZI PointType;
 
+enum class SensorType { MULRAN, VELODYNE, OUSTER };
+
 class ParamServer
 {
 public:
@@ -90,9 +92,9 @@ public:
     string savePCDDirectory;
 
     // Velodyne Sensor Configuration: Velodyne
+    SensorType sensor;
     int N_SCAN;
     int Horizon_SCAN;
-    string timeField;
     int downsampleRate;
     float lidarMinRange;
     float lidarMaxRange;
@@ -172,9 +174,29 @@ public:
         nh.param<bool>("lio_sam/savePCD", savePCD, false);
         nh.param<std::string>("lio_sam/savePCDDirectory", savePCDDirectory, "/Downloads/LOAM/");
 
+        std::string sensorStr;
+        nh.param<std::string>("lio_sam/sensor", sensorStr, "");
+        if (sensorStr == "velodyne")
+        {
+            sensor = SensorType::VELODYNE;
+        }
+        else if (sensorStr == "ouster")
+        {
+            sensor = SensorType::OUSTER;
+        }
+        else if (sensorStr == "mulran")
+        {
+            sensor = SensorType::MULRAN;
+        }
+        else
+        {
+            ROS_ERROR_STREAM(
+                "Invalid sensor type (must be either 'velodyne' or 'ouster' or 'mulran'): " << sensorStr);
+            ros::shutdown();
+        }
+
         nh.param<int>("lio_sam/N_SCAN", N_SCAN, 16);
         nh.param<int>("lio_sam/Horizon_SCAN", Horizon_SCAN, 1800);
-        nh.param<std::string>("lio_sam/timeField", timeField, "time");
         nh.param<int>("lio_sam/downsampleRate", downsampleRate, 1);
         nh.param<float>("lio_sam/lidarMinRange", lidarMinRange, 1.0);
         nh.param<float>("lio_sam/lidarMaxRange", lidarMaxRange, 1000.0);

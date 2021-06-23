@@ -43,7 +43,7 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
     cd ..
     catkin_make
     source devel/setup.bash
-    roslaunch lio_sam run.launch
+    roslaunch lio_sam run.launch # or roslaunch lio_sam run_mulran.launch
     ```
 3. By following [this guideline](https://github.com/irapkaist/file_player_mulran), you can easily publish the MulRan dataset's LiDAR and IMU topics via ROS.
 
@@ -70,6 +70,8 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
 - If you use the above saved files, you can feed these data to [Removert](https://github.com/irapkaist/removert) and can removing dynamic objects. No GT labels or external sensor data such as RTK-GPS is required. This [tutorial](https://youtu.be/UiYYrPMcIRU) guides steps from running SC-LIO-SAM to save data to Removert to remove dynamic objects in a scan. Example results are: 
 <p align="center"><img src="SC-LIO-SAM/doc/removert_eaxmple.png" width=900></p>
 
+- For the safe and light-weight map saver, we support off-line scan merging utils for the global map construction within user's ROI (see tools/python/makeMergedMap.py, for the details, see the [tutorial video](https://youtu.be/jmR3DH_A4Co)) 
+  <p align="center"><img src="SC-LIO-SAM/doc/utils_example.png" width=900></p>
 
 ## Cite SC-LIO-SAM 
 
@@ -102,6 +104,11 @@ We provide example results using [MulRan dataset](https://sites.google.com/view/
 
 ## Acknowledgement
   - SC-LIO-SAM is based on LIO-SAM (Tixiao Shan et al., IROS 2020). We thank Tixiao Shan and the LIO-SAM authors for providing a great base framework.
+
+## Update history 
+- 2021.06.23
+  - yaml file is reformatted to support the compatible form with the recent original LIO-SAM repository.  
+  - offline ROI global map construction python util is supported. 
 
 ## TODO
 - About performance
