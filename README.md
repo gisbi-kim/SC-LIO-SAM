@@ -1,5 +1,5 @@
 # SC-LIO-SAM
-version 2020-11-19 
+version 2021-06-24 
 
 ## What is SC-LIO-SAM?
 - SC-LIO-SAM is **a real-time lidar-inertial SLAM package.**
