@@ -8,7 +8,7 @@ version 2021-06-24
 - For more details for each algorithm please refer to <br>
   Scan Context https://github.com/irapkaist/scancontext <br>
   LIO-SAM https://github.com/TixiaoShan/LIO-SAM <br>
-- You can also use the LiDAR-only version of this project, named [SC-LeGO-LOAM](https://github.com/irapkaist/SC-LeGO-LOAM).
+- You can also use the LiDAR-only versions of this project: [SC-LeGO-LOAM](https://github.com/irapkaist/SC-LeGO-LOAM) and [SC-A-LOAM](https://github.com/gisbi-kim/SC-A-LOAM).
 
 ## Scan Context: A fast and robust place recognition
 - Light-weight: a single header and cpp file named "Scancontext.h" and "Scancontext.cpp"
