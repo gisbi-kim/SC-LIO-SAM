@@ -20,7 +20,8 @@ lio_sam:
   
   # Export settings
   savePCD: true                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
-  savePCDDirectory: "/home/user/Desktop/data/scliosam/"  # use global path, and end with "/" 
+  savePCDDirectory: "/home/user/Desktop/scliosam/data/"  # use global path, and end with "/" 
+    # warning: if you have already data in the above savePCDDirectory, it will all remove and remake them. Thus, backup is recommended if pre-made data exist. 
 
   # Sensor Settings
   sensor: mulran                            # lidar sensor type, either 'velodyne' or 'ouster'
