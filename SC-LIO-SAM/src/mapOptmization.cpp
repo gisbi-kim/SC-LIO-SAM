@@ -15,7 +15,8 @@
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/inference/Symbol.h>
-
+#include "std_msgs/String.h"
+#include <sstream>
 #include <gtsam/nonlinear/ISAM2.h>
 
 #include "Scancontext.h"
@@ -113,6 +114,7 @@ public:
     ros::Subscriber subCloud;
     ros::Subscriber subGPS;
     ros::Subscriber subLoop;
+    ros::Subscriber subSaveFlag;
 
     std::deque<nav_msgs::Odometry> gpsQueue;
     lio_sam::cloud_info cloudInfo;
@@ -209,6 +211,7 @@ public:
 
     std::string saveSCDDirectory;
     std::string saveNodePCDDirectory;
+    std::string flag;
 
 public:
     mapOptimization()
@@ -227,6 +230,7 @@ public:
         subCloud = nh.subscribe<lio_sam::cloud_info>("lio_sam/feature/cloud_info", 1, &mapOptimization::laserCloudInfoHandler, this, ros::TransportHints().tcpNoDelay());
         subGPS   = nh.subscribe<nav_msgs::Odometry> (gpsTopic, 200, &mapOptimization::gpsHandler, this, ros::TransportHints().tcpNoDelay());
         subLoop  = nh.subscribe<std_msgs::Float64MultiArray>("lio_loop/loop_closure_detection", 1, &mapOptimization::loopInfoHandler, this, ros::TransportHints().tcpNoDelay());
+        subSaveFlag = nh.subscribe<std_msgs::String>("lio_sam/save/save_flag", 1, &mapOptimization::saveFlagHandler, this, ros::TransportHints().tcpNoDelay());
 
         pubHistoryKeyFrames   = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/icp_loop_closure_history_cloud", 1);
         pubIcpKeyFrames       = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/icp_loop_closure_corrected_cloud", 1);
@@ -467,19 +471,8 @@ public:
         return thisPose6D;
     }
 
-
-    void visualizeGlobalMapThread()
+    void saveGlobalMap()
     {
-        //
-        ros::Rate rate(0.2);
-        while (ros::ok()){
-            rate.sleep();
-            publishGlobalMap();
-        }
-
-        if (savePCD == false)
-            return;
-
         // save pose graph (runs when programe is closing)
         cout << "****************************************************" << endl; 
         cout << "Saving the posegraph ..." << endl; // giseop
@@ -529,8 +522,26 @@ public:
         cout << "Saving map to pcd files completed" << endl;
     }
 
+    void visualizeGlobalMapThread()
+    {
+        //
+        ros::Rate rate(0.2);
+        while (ros::ok()){
+            rate.sleep();
+            publishGlobalMap();
+        }
+
+        if (savePCD == false)
+            return;
+        
+        saveGlobalMap();       
+    }
+
     void publishGlobalMap()
     {
+        if (flag == "")
+            saveGlobalMap();
+
         if (pubLaserCloudSurround.getNumSubscribers() == 0)
             return;
 
@@ -602,6 +613,12 @@ public:
 
         while (loopInfoVec.size() > 5)
             loopInfoVec.pop_front();
+    }
+
+    // Save Flag Handler
+    void saveFlagHandler(const  std_msgs::String::ConstPtr& saveFlagMsg)
+    {
+        flag = saveFlagMsg->data;
     }
 
     void performRSLoopClosure()
