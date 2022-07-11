@@ -16,7 +16,6 @@
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/inference/Symbol.h>
 #include "std_msgs/String.h"
-#include <sstream>
 #include <gtsam/nonlinear/ISAM2.h>
 
 #include "Scancontext.h"
@@ -539,7 +538,7 @@ public:
 
     void publishGlobalMap()
     {
-        if (flag == "")
+        if (flag == "1")
             saveGlobalMap();
 
         if (pubLaserCloudSurround.getNumSubscribers() == 0)
