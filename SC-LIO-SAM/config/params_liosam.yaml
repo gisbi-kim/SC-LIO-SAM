@@ -24,9 +24,9 @@ lio_sam:
     # warning: if you have already data in the above savePCDDirectory, it will all remove and remake them. Thus, backup is recommended if pre-made data exist. 
 
   # Sensor Settings
-  sensor: ouster                            # lidar sensor type, either 'velodyne' or 'ouster'
-  N_SCAN: 128                               # number of lidar channel (i.e., 16, 32, 64, 128)
-  Horizon_SCAN: 1024                          # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048)
+  sensor: ouster                            # lidar sensor type, 'velodyne' or 'ouster' or 'livox'
+  N_SCAN: 128                               # number of lidar channel (i.e., 16, 32, 64, 128, Livox Horizon: 6)
+  Horizon_SCAN: 1024                          # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000))
   downsampleRate: 1                           # default: 1. Downsample your data if too many points. i.e., 16 = 64 / 4, 16 = 16 / 1
   lidarMinRange: 1.0                          # default: 1.0, minimum lidar range to be used
   lidarMaxRange: 1000.0                       # default: 1000.0, maximum lidar range to be used
