@@ -12,8 +12,6 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include <opencv/cv.h>
-
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/search/impl/search.hpp>
@@ -27,6 +25,8 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/crop_box.h> 
 #include <pcl_conversions/pcl_conversions.h>
+
+#include <opencv2/opencv.hpp>
 
 #include <tf/LinearMath/Quaternion.h>
 #include <tf/transform_listener.h>
@@ -59,7 +59,7 @@ typedef std::numeric_limits< double > dbl;
 
 typedef pcl::PointXYZI PointType;
 
-enum class SensorType { MULRAN, VELODYNE, OUSTER };
+enum class SensorType { MULRAN, VELODYNE, OUSTER, LIVOX };
 
 class ParamServer
 {
@@ -188,10 +188,14 @@ public:
         {
             sensor = SensorType::MULRAN;
         }
+        else if (sensorStr == "livox")
+        {
+            sensor = SensorType::LIVOX;
+        }
         else
         {
             ROS_ERROR_STREAM(
-                "Invalid sensor type (must be either 'velodyne' or 'ouster' or 'mulran'): " << sensorStr);
+                "Invalid sensor type (must be either 'velodyne' or 'ouster' or 'mulran' or 'livox'): " << sensorStr);
             ros::shutdown();
         }
 
